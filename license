@@ -1,0 +1,93 @@
+# Upstream to abstract backend connection(s) for php
+upstream php_license {
+	server unix:/run/php/php7.0-fpm.sock;
+}
+ 
+server {
+        server_name license.algosamurai.com;
+        root /var/www/html/license;
+        index index.php;
+
+	location ~ /.svn/ {
+	    deny all;
+	} 
+
+        location = /favicon.ico {
+                log_not_found off;
+                access_log off;
+        }
+ 
+        location = /robots.txt {
+                allow all;
+                log_not_found off;
+                access_log off;
+        }
+ 
+        location / {
+        try_files $uri/index.html $uri.html $uri/ @extensionless-php;
+        }
+
+        location @extensionless-php {
+            rewrite ^(.*)/(.*)$ $1/$2.php last;
+            rewrite ^(.*)$ $1.php last;
+        }
+          location ~ \.php$ {
+                #NOTE: You should have "cgi.fix_pathinfo = 0;" in php.ini
+                # include fastcgi.conf;
+                fastcgi_intercept_errors on;
+                fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+                include fastcgi_params;
+                #fastcgi_pass php_license;
+                fastcgi_pass unix:/run/php/php7.0-fpm.sock;  
+              
+}
+        location /metatrader {
+          rewrite ^/metatrader(.*)$ /files/metatrader.php$1 ;
+        }
+
+        location /office {
+          rewrite ^/office(.*)$ /files/office.php$1 ;
+        }
+
+        location /connect {
+          rewrite ^/connect(.*)$ /files/connect.php$1 ;
+        }
+
+        location /download {
+          rewrite ^/download(.*)$ /download.php$1 ;
+        }
+
+        location /purchase {
+          rewrite ^/purchase(.*)$ /purchase.php$1 ;
+        }
+
+        location /.htaccess {
+          deny all;
+        }
+ 
+      
+	
+	include snippets/w3.conf;
+
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/license.algosamurai.com/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/license.algosamurai.com/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+}
+
+ 
+server {
+    if ($host = license.algosamurai.com) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+        listen 80;
+        server_name license.algosamurai.com;
+    return 404; # managed by Certbot
+
+
+}
+

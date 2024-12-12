@@ -1,0 +1,10 @@
+<FilesMatch "office\.php|connect\.php|connect2\.php|mysqli_update\.php|logout\.php">
+AuthType Basic
+AuthName "Private zone"
+AuthUserFile /home/edjaptkb/domains/algosamurai.freewebhostmost.com/public_html/files/.htpasswd
+require valid-user
+</FilesMatch>
+
+<FilesMatch ".(htaccess|htpasswd|inc.php)$">
+deny from all
+</FilesMatch>
