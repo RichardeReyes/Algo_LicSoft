@@ -1,15 +1,41 @@
 <?php
 require "connect_mysql.inc.php";
 
+file_put_contents("Dbg.txt","Iniciox");
+
+
+
+
 if(empty($_POST['r1'])) {
-  echo ":::Error 429=contact technical support"; // ответ в терминал при ошибке
-  exit();
+	if(empty($_GET['r1']))  {
+		file_put_contents("Dbg.txt","ErrRR1",FILE_APPEND);
+
+		echo ":::Error 429=contact technical support"; // respuesta al terminal en caso de error
+		exit();
+	}
+	else
+	{
+		$PRMT=$_GET['r1'];
+		file_put_contents("Dbg.txt","Pmt-".$PRMT,FILE_APPEND);
+	}
+} 
+else
+{
+	$PRMT=$_POST['r1'];
 }
-$arrpost=explode("$",str_replace(' ','+',$_POST['r1']));
+
+
+file_put_contents("Dbg.txt","2",FILE_APPEND);
+
+$arrpost=explode("$",str_replace(' ','+',$PRMT));
 if(count($arrpost)!=3) {
-  echo ":::Error 429=contact technical support"; // ответ в терминал при ошибке
+file_put_contents("Dbg.txt","ErrRR2",FILE_APPEND);
+  echo ":::Error 429=contact technical support-".$PRMT; // respuesta al terminal en caso de error
   exit();
 }
+
+file_put_contents("Dbg.txt","3",FILE_APPEND);
+
 $post_key=$post1=StringDecrypt($arrpost[0],"jlY2E9rzw/qJOd1S#G!28/k10C3!Sku5");
 $criptkey="h4yT!H3/dA3K9z".$post_key."trl/xdFgj#erPjm";
 $post1=StringDecrypt($arrpost[1],$criptkey);
@@ -36,6 +62,10 @@ $req16=trim($POST[16]); // driveID
 $req17=trim($POST[17]); // UUID
 $req18=trim($POST[18]); // Code
 $NowIP=$_SERVER['REMOTE_ADDR']; // IP
+
+
+file_put_contents("Dbg.txt","Prueba".$req16,FILE_APPEND);
+
 switch($req5) {
     case 0: $req5="Demo";    break;
     case 1: $req5="Contest"; break;
@@ -45,21 +75,21 @@ switch($req15) {
     case 0: $req15="Investor"; break;
     case 1: $req15="Trader";   break;
 }
-// Текущая Версия продукта
+// Versión actual del producto
 $program="";
 foreach($ar_prog as $x) {
   if($req4==trim(explode(",",$x)[0])) {
 	$program=trim(explode(",",$x)[0]);
     $version=trim(explode(",",$x)[1]);
-	$period=trim(explode(",",$x)[2]);  // Авто-регистрация с терминала на N-дней
-	$package=trim(explode(",",$x)[3]); // Авто-регистрация с Пакетом
-	$num_activ=trim(explode(",",$x)[4]); // Количество активаций
+	$period=trim(explode(",",$x)[2]);  // Registro automático desde la terminal por N días
+	$package=trim(explode(",",$x)[3]); // Registro automático con el paquete
+	$num_activ=trim(explode(",",$x)[4]); // Número de activaciones
 	break;
   }
 }
-// Проверка на имя подключаемого советника
+// Comprobando el nombre del asesor conectado
 if($program=="") {
-  echo StringEncrypt(":::The program is not registered in the system|end",$criptkey); // ответ в терминал
+  echo StringEncrypt(":::The program is not registered in the system|end",$criptkey); // respuesta a la terminal
   exit();
 }
 
@@ -67,7 +97,7 @@ if($program=="") {
  $db = mysqli_connect($localhost, $mysql_user, $mysql_password, $mysql_db);
  mysqli_set_charset($db, 'utf8'); //utf-8
   if(!$db) {
-	echo StringEncrypt(":::Error 503=Try later|end",$criptkey); // ответ в терминал при ошибке подключения к базе
+	echo StringEncrypt(":::Error 503=Try later|end",$criptkey); // respuesta al terminal cuando hay un error al conectarse a la base de datos
     exit();
   }
 //--
@@ -92,7 +122,7 @@ if($program=="") {
 	  break;
     }
    }
-    //- Поиск ID-железа в базе
+    //- Buscar hardware de identificación en la base de datos
   /*  $hist_sNo= $row["hist_serialNo"];
     if(stristr($hist_sNo, $req16)) {
       $maxdate[]= $row["deactivate_date"];
@@ -115,14 +145,15 @@ if($program=="") {
 
 	//- Блокировки
 	if(($req2==$full_name && $full_name_blocked==1) || $serialNo_blocked==1) {
-     if($req16!='') { // обновим данные об устройстве и подключении
+     if($req16!='') { // actualizar la información del dispositivo y de la conexión
       $result = mysqli_query($db,"UPDATE `users_auth` SET `serialNo`='$req16',`ip`='$NowIP',`trading`='$req15',`hist_serialNo`=CONCAT_WS('|',`hist_serialNo`,'$req16'),`ip_history`=CONCAT_WS('|',`ip_history`,'$NowIP'), `hist_trading`=CONCAT_WS('|',`hist_trading`,'$req15'),`date_change_conf`=CONCAT_WS('|',`date_change_conf`,'".time()."') WHERE serialNo!='$req16' AND account='$req1'");
      }
      echo StringEncrypt(":::Blocked User".($serialNo_blocked==1?": ".$req16:"")."|end",$criptkey);
 	 mysqli_close($db);
 	 exit();
 	}
- //-- Если номер счёта есть в базе - заполним данными
+ //-- Si el número de cuenta está en la base de datos- rellena los datos
+
    if($req1 == $row["account"]) {
     $_id= $row["id"];
     $_account= $row["account"];
@@ -141,28 +172,28 @@ if($program=="") {
 	$Account_exists=true;
    }
   }
- // Результаты поиска по ID-железа
-  // Если превышено количество активаций
+ // Resultados de búsqueda por ID de hardware
+  // Si se excede el número de activaciones
   if($uncount_id>$num_activ) {
     $result = mysqli_query($db,"UPDATE `users_auth` SET `serialNo`='$req16',`ip`='$NowIP',`trading`='$req15',`hist_serialNo`=CONCAT_WS('|',`hist_serialNo`,'$req16'),`ip_history`=CONCAT_WS('|',`ip_history`,'$NowIP'), `hist_trading`=CONCAT_WS('|',`hist_trading`,'$req15'),`date_change_conf`=CONCAT_WS('|',`date_change_conf`,'".time()."') WHERE serialNo!='$req16' AND account='$req1'");
-	echo StringEncrypt(":::The number of activations has ended: ".$uncount_id."|end",$criptkey); // Количество активаций закончилось
+	echo StringEncrypt(":::The number of activations has ended: ".$uncount_id."|end",$criptkey); // El número de activaciones ha finalizado.
 	mysqli_close($db);
 	exit;
   }
 
 //-----------------------------
-// Если номер счёта есть в базе
+// Si el número de cuenta está en la base de datos
 if($Account_exists) {
-//- заполним/добавим/обновим данные (ручная регистрация)
+//- rellenar/añadir/actualizar datos (registro manual)
 if($req2!=$_full_name) {
   $req2=iconv('cp1251', 'utf-8', $req2);
   $result = mysqli_query($db,"UPDATE `users_auth` SET `full_name`='$req2',`company`='$req3',`server`='$req13',`mt`='$req7',`type`='$req5',`currency`='$req14',`serialNo`='$req16',`ip`='$NowIP',`trading`='$req15',`hist_serialNo`='$req16',`ip_history`='$NowIP', `hist_trading`='$req15',`date_change_conf`='".time()."' WHERE id=$_id");
 }
-//- обновим данные об устройстве и подключении
+//- actualizar la información del dispositivo y de la conexión
 if($req16!=$_serialNo && $req16!='' && $_serialNo!='') {
   $result = mysqli_query($db,"UPDATE `users_auth` SET `serialNo`='$req16',`ip`='$NowIP',`trading`='$req15',`hist_serialNo`=CONCAT_WS('|',`hist_serialNo`,'$req16'),`ip_history`=CONCAT_WS('|',`ip_history`,'$NowIP'), `hist_trading`=CONCAT_WS('|',`hist_trading`,'$req15'),`date_change_conf`=CONCAT_WS('|',`date_change_conf`,'".time()."') WHERE id=$_id");
 }
-//- обновим баланс и версию программы
+//- actualiza tu saldo y versión del programa
 //if($_version!=$req6 || $_balance!=$req10 || $_equity!=$req11 || $_close_profit!=$req12) {
 if($_balance!=$req10 || $_equity!=$req11 || $_close_profit!=$req12) {
   if($_hist_balance==0) {
@@ -171,13 +202,13 @@ if($_balance!=$req10 || $_equity!=$req11 || $_close_profit!=$req12) {
 	$result = mysqli_query($db,"UPDATE `users_auth` SET `version`='$req6',`balance`='$req10',`equity`='$req11',`close_profit`='$req12' WHERE id=$_id");
   }
 }
-//- проверим активацию
+//- comprobemos la activación
  if($_deactive_date>=time()-0) {
-  // обновим количество соединений `connect`
+  // actualizar el número de conexiones `connect`
   $result = mysqli_query($db,"UPDATE `users_auth` SET `connect`=`connect`+1,`last_connect`='".date('d.m.Y',time())."' WHERE id=$_id");
-//  if($req6==$version) { // Если версии совпадают
-//    echo StringEncrypt(date('d.m.Y',$_deactive_date)."|".$_package."|".$version."||end",$criptkey); // Всё хорошо
-    echo StringEncrypt(date('d.m.Y',$_deactive_date)."|".$_package."|".$req6."||end",$criptkey); // Всё хорошо
+//  if($req6==$version) { // Si las versiones coinciden
+//    echo StringEncrypt(date('d.m.Y',$_deactive_date)."|".$_package."|".$version."||end",$criptkey); // todo esta bien
+    echo StringEncrypt(date('d.m.Y',$_deactive_date)."|".$_package."|".$req6."||end",$criptkey); // todo esta bien
 //  } else {
 //    $b_prog=array();
 //    $fh=fopen("price_link.txt","r");
@@ -187,20 +218,20 @@ if($_balance!=$req10 || $_equity!=$req11 || $_close_profit!=$req12) {
 //    } fclose($fh);
 //	foreach($b_prog as $str2) {
 //	 if($req4==trim(explode(",", $str2)[0])) {
-//      echo StringEncrypt(date('d.m.Y',$_deactive_date)."|".$_package."|".$version."|".trim(explode(",", $str2)[3])."|end",$criptkey); // Комментарий на график
+//      echo StringEncrypt(date('d.m.Y',$_deactive_date)."|".$_package."|".$version."|".trim(explode(",", $str2)[3])."|end",$criptkey); // Comentar en el gráfico.
 //	 }
 //	}
 //  }
  } else {
-  // обновим количество соединений `disconnect`
+  // actualizar el número de conexiones `disconnect`
   $result = mysqli_query($db,"UPDATE `users_auth` SET `disconnect`=`disconnect`+1,`last_connect`='".date('d.m.Y',time())."' WHERE id=$_id");
   echo StringEncrypt(":::Activation expired: ".$req16."|end",$criptkey);
   }
   mysqli_close($db);
   exit();
 } else { ///////////////////////////////////////////////
- // Если нет пользователя, запишем в базу как "Смотрели"
-  // если попали на выходной - добавим активации
+ // Si no hay ningún usuario, lo registraremos en la base de datos como “Vigilado”
+  // Si estás en fin de semana, agregaremos activaciones.
   if($period>0) {
    switch(date("w",time())) {
     case 5: $period+=3; break;
@@ -209,7 +240,7 @@ if($_balance!=$req10 || $_equity!=$req11 || $_close_profit!=$req12) {
 	default: $period+=1;
    }
   }
- $dt=strtotime(date('d.m.Y',time()+(86400*$period)))-1; // дата деактивации
+ $dt=strtotime(date('d.m.Y',time()+(86400*$period)))-1; // fecha de desactivación
  $comm=' ';
  
   $req2=iconv('cp1251', 'utf-8', $req2);
@@ -222,7 +253,7 @@ VALUES ('$cn','".date('d.m.Y H:i',time())."','$req2','$req1','$req3','$req13','$
   $add = mysqli_query($db, $result); // or die(mysqli_error($db));
    if(!$add) {
 	$reg = mysqli_error($db);
-	echo StringEncrypt(':::Error 503=Try later|end"',$criptkey); // ответ в терминал при ошибке подключения к базе
+	echo StringEncrypt(':::Error 503=Try later|end"',$criptkey); // respuesta al terminal cuando hay un error al conectarse a la base de datos
    } else {
 	echo StringEncrypt(date('d.m.Y',$dt).'|'.$package."|".'Registered|""|end',$criptkey); // Registered before: 10 symb
 	$email=file_get_contents("mail.txt");

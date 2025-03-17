@@ -1,7 +1,7 @@
 <FilesMatch "office\.php|connect\.php|connect2\.php|mysqli_update\.php|logout\.php">
 AuthType Basic
 AuthName "Private zone"
-AuthUserFile /home/edjaptkb/domains/algosamuraifx.com/public_html/files/.htpasswd
+AuthUserFile /home/edjaptkb/domains/algosamurai.freewebhostmost.com/public_html/files/.htpasswd
 require valid-user
 </FilesMatch>
 

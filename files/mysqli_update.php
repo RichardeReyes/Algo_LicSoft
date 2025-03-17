@@ -76,7 +76,8 @@ if($moderator && $_POST['update']!=3 && $_POST['update']!=4 && $_POST['update']!
  }
  if($_POST['update']==4) {
    $tm = strtotime($_POST['upday'].'-'.$_POST['upmonth'].'-'.$_POST['upyear']. '23:59:59');
-   $test=$_POST['upyear']==2038?1:$_POST['url']==1?1:2;
+   $test=$_POST['upyear']==2038?1:(($_POST['url']==1)?1:2);
+   //$test=$_POST['upyear']==2038?1:$_POST['url']==1?1:2;
 	$result = "UPDATE `users_auth` SET `deactivate_date`='$tm',
 									   `hist_update_date`=CONCAT_WS('|',`hist_update_date`, '$today'),
 									   `hist_deactivate_date`=CONCAT_WS('|',`hist_deactivate_date`, '$tm'),
